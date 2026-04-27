@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <title th:text="#{profile.page.title}">My Profile — MVA</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/profile.css">
+    </th:block>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <div class="container py-5">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a th:href="@{/}" th:text="#{profile.breadcrumb.home}">Home</a></li>
+                <li class="breadcrumb-item active" th:text="#{profile.breadcrumb.current}">My Profile</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-lg-4 mb-4">
+                <div class="card profile-card border-0 h-100">
+                    <div class="card-body p-4">
+                        <h3 class="fw-bold text-dark mb-4" th:text="#{profile.info.title}">Profile Info</h3>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-4">
+                                <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.2rem;">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-0 ms-3" th:text="${user.email.split('@')[0]}">User</h5>
+                            </div>
+                            <div class="user-details">
+                                <div class="mb-3">
+                                    <strong th:text="#{profile.info.email}">Email:</strong><br>
+                                    <span th:text="${user.email}">user@example.com</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong th:text="#{profile.info.id}">User ID:</strong><br>
+                                    <span th:text="${user.id}">123</span>
+                                </div>
+                                <div class="mb-3">
+                                    <strong th:text="#{profile.info.role}">Role:</strong><br>
+                                    <span class="badge bg-light text-dark border" th:text="${user.role.name()}">USER</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="quick-stats border-top pt-3">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="stat-item">
+                                        <h4 class="fw-bold text-warning mb-1" th:text="${transactionCount != null ? transactionCount : 0}">0</h4>
+                                        <small class="text-muted" th:text="#{profile.stats.expenses}">Expenses</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stat-item">
+                                        <h4 class="fw-bold text-warning mb-1" th:text="${alertCount != null ? alertCount : 0}">0</h4>
+                                        <small class="text-muted" th:text="#{profile.stats.alerts}">Active Alerts</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card profile-card border-0 mb-4">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold text-dark mb-4" th:text="#{profile.manage.title}">Account Management</h4>
+
+                        <div class="mb-5">
+                            <h5 class="fw-semibold text-warning mb-3" th:text="#{profile.manage.update.info}">Update Profile</h5>
+                            <form id="updateProfileForm" class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" th:text="#{profile.label.email}">Email Address</label>
+                                    <input type="email" class="form-control" id="newEmail" th:value="${user.email}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" th:text="#{profile.label.current.pass}">Current Password</label>
+                                    <input type="password" class="form-control" id="profileCurrentPassword" th:placeholder="#{profile.ph.confirm}" required>
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-outline-warning" id="updateProfileBtn"
+                                            th:data-user-id="${user.id}" th:text="#{profile.btn.save}">
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-semibold text-warning mb-3" th:text="#{profile.manage.security}">Security</h5>
+                            <form id="updatePasswordForm" class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label" th:text="#{profile.label.new.pass}">New Password</label>
+                                    <input type="password" class="form-control" id="newPassword" th:placeholder="#{profile.ph.min.chars}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label" th:text="#{profile.label.current.pass}">Current Password</label>
+                                    <input type="password" class="form-control" id="passwordCurrentPassword" th:placeholder="#{profile.ph.verify}" required>
+                                </div>
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-outline-warning" id="updatePasswordBtn"
+                                            th:data-user-id="${user.id}" th:text="#{profile.btn.update.pass}">
+                                        Update Password
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card profile-card border-0">
+                    <div class="card-body p-4">
+                        <h4 class="fw-bold text-dark mb-4" th:text="#{profile.activity.title}">Recent Activity</h4>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                <tr>
+                                    <th th:text="#{profile.table.date}">Date</th>
+                                    <th th:text="#{profile.table.amount}">Amount</th>
+                                    <th th:text="#{profile.table.currency}">Currency</th>
+                                    <th th:text="#{profile.table.actions}">Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="txn : ${recentTransactions}">
+                                    <td th:text="${#temporals.format(txn.createdAt, 'dd/MM/yyyy')}"></td>
+                                    <td class="fw-bold text-dark" th:text="${txn.amount}"></td>
+                                    <td th:text="${txn.currency}">KZT</td>
+                                    <td>
+                                        <a th:href="@{/transactions}" class="btn btn-sm btn-outline-warning border-0">
+                                            <i class="fa-solid fa-arrow-right-long"></i> <span th:text="#{profile.btn.view.all}">View All</span>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr th:if="${recentTransactions == null or recentTransactions.isEmpty()}">
+                                    <td colspan="4" class="text-center py-4 text-muted" th:text="#{profile.table.empty}">No recent activity found.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card profile-card border-0 mt-4" style="border: 1px solid rgba(238, 106, 89, 0.2) !important;">
+                        <div class="card-body p-4 text-center">
+                            <h6 class="text-danger fw-bold mb-3" th:text="#{profile.danger.title}">Danger Zone</h6>
+                            <p class="small text-muted mb-4" th:text="#{profile.danger.desc}">Once you delete your account, there is no going back. Please be certain.</p>
+                            <button class="btn btn-outline-danger w-100" th:onclick="'handleDeleteAccount(' + ${user.id} + ')'"
+                                    style="border-radius: 10px;" th:text="#{profile.btn.delete}">
+                                Delete Account
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script th:inline="javascript">
+        const i18n = {
+            confirmDelete: [[#{profile.js.confirm.delete}]],
+            accountDeleted: [[#{profile.js.deleted.redirect}]],
+            userDeleted: [[#{profile.js.user.deleted}]],
+            fillFields: [[#{profile.js.fill.fields}]],
+            forceLogout: [[#{profile.js.force.logout}]]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const userId = [[${user.id}]];
+
+            const forceLogout = async () => {
+                alert(i18n.forceLogout);
+                await logout();
+            };
+
+            document.getElementById('updateProfileBtn').onclick = async function() {
+                const newEmail = document.getElementById('newEmail').value;
+                const password = document.getElementById('profileCurrentPassword').value;
+
+                if(!newEmail || !password) return alert(i18n.fillFields);
+
+                try {
+                    const response = await fetch(`/api/users/${userId}/update-info?newEmail=${encodeURIComponent(newEmail)}&currentPassword=${encodeURIComponent(password)}`, {
+                        method: 'PUT'
+                    });
+
+                    if (response.ok) {
+                        await forceLogout();
+                    } else {
+                        const error = await response.text();
+                        alert('Error: ' + error);
+                    }
+                } catch (e) {
+                    alert('Connection error');
+                }
+            };
+
+            document.getElementById('updatePasswordBtn').onclick = async function() {
+                const newPass = document.getElementById('newPassword').value;
+                const oldPass = document.getElementById('passwordCurrentPassword').value;
+
+                if(!newPass || !oldPass) return alert(i18n.fillFields);
+
+                try {
+                    const response = await fetch(`/api/users/${userId}/update-password?newPassword=${encodeURIComponent(newPass)}&currentPassword=${encodeURIComponent(oldPass)}`, {
+                        method: 'PATCH'
+                    });
+
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Failed: Check your current password');
+                    }
+                } catch (e) {
+                    console.error(e);
+                }
+            };
+
+            window.handleDeleteAccount = async function(id) {
+                if (confirm(i18n.confirmDelete)) {
+                    try {
+                        const response = await makeAuthenticatedRequest(`/api/users/${id}`, {
+                            method: 'DELETE'
+                        });
+
+                        if (response.ok) {
+                            const currentUser = getUser();
+                            if (currentUser && String(currentUser.id) === String(id)) {
+                                alert(i18n.accountDeleted);
+                                await logout();
+                            } else {
+                                alert(i18n.userDeleted);
+                                window.location.href = '/admin/users';
+                            }
+                        } else {
+                            alert('Error during deletion.');
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+            };
+        });
+    </script>
+</th:block>
+</body>
+</html>

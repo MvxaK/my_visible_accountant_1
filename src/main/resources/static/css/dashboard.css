@@ -1,0 +1,160 @@
+.page-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    color: #1a1a1a;
+    margin-bottom: 0.2rem;
+}
+
+.page-subtitle {
+    color: #6c757d;
+    font-size: 0.95rem;
+}
+
+.chart-grid-dual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.amt-income {
+    color: #28a745 !important;
+    background: rgba(40, 167, 69, 0.08);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.amt-expense {
+    color: #EE6A59 !important;
+    background: rgba(238, 106, 89, 0.08);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.trend-up { color: #28a745; }
+.trend-warn { color: #EE6A59; }
+
+.glass-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    backdrop-filter: blur(5px);
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    box-shadow: 0 10px 20px rgba(255, 193, 7, 0.1);
+    border-color: #ffc107;
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+}
+
+.chart-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+}
+
+.si-accent { background: rgba(238, 106, 89, 0.15); color: #EE6A59; }
+.si-amber  { background: rgba(255, 193, 7, 0.15); color: #d39e00; }
+.si-income { background: rgba(40, 167, 69, 0.15); color: #28a745; }
+.si-cream  { background: #f1f3f5; color: #19191b; }
+
+.stat-value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: #1a1a1a;
+    margin: 0.5rem 0;
+}
+
+canvas {
+    min-height: 280px;
+    max-height: 350px;
+    width: 100% !important;
+}
+
+.badge-expense, .badge-income {
+    font-size: 0.7rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.badge-expense {
+    background: rgba(238, 106, 89, 0.1);
+    color: #EE6A59;
+    border: 1px solid rgba(238, 106, 89, 0.2);
+    font-size: 0.7rem;
+}
+
+.badge-income {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+    font-size: 0.7rem;
+}
+
+.txn-table-container { overflow: hidden; }
+
+.table thead th {
+    background: #fdfdfd;
+    color: #1a1a1a;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #f1f3f5;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(255, 193, 7, 0.03);
+}
+
+.category-pill {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 50px;
+    background: #fff9db;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.alert-banner {
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    color: #c53030;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.alert-banner strong { color: #c53030; font-weight: 800; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: #ffc107; }
+
+@media (max-width: 992px) {
+    .chart-grid-dual {
+        grid-template-columns: 1fr;
+    }
+}

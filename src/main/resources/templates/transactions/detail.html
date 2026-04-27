@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+  <title th:text="#{txn.details.page.title(${transaction.id})}">Transaction Details</title>
+  <th:block layout:fragment="page-specific-head">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/alerts.css">
+    <link rel="stylesheet" href="/css/transactions.css">
+  </th:block>
+</head>
+
+<body layout:fragment="content">
+<div class="container my-4">
+
+  <div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <a th:href="@{/transactions}" class="text-muted small text-decoration-none">
+        <i class="fa-solid fa-arrow-left me-1"></i> <span th:text="#{txn.details.back}">Back to Transactions</span>
+      </a>
+      <div class="page-title mt-2" th:text="#{txn.details.header(${transaction.id})}">#12345</div>
+      <div class="page-subtitle text-muted" th:text="#{txn.details.subtitle}">View details and edit this entry</div>
+    </div>
+    <div class="category-pill py-2 px-3 fw-bold">
+      <span th:each="cat : ${categories}" th:if="${cat.id.equals(transaction.categoryId)}" th:text="${cat.name}">Food</span>
+      <span th:if="${transaction.categoryId == null}" th:text="#{txn.details.uncategorized}">Uncategorized</span>
+    </div>
+  </div>
+
+  <div class="error-box mb-3" id="errorBox" style="display:none;">
+    <i class="fa-solid fa-circle-exclamation me-2"></i> <span id="errorMsg"></span>
+  </div>
+  <div class="success-box mb-3" id="successBox" style="display:none;">
+    <i class="fa-solid fa-circle-check me-2"></i> <span th:text="#{txn.details.success.msg}">Transaction updated successfully!</span>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="glass-card p-4 mb-4 shadow-sm">
+        <div class="amount-display-container p-4 rounded-4 mb-4" style="background: rgba(255, 193, 7, 0.05); border: 1px solid rgba(255, 193, 7, 0.1);">
+          <div class="text-muted small text-uppercase fw-bold mb-1" style="letter-spacing: 0.5px;" th:text="#{txn.details.total}">Total Amount</div>
+          <div class="d-flex align-items-baseline">
+            <span class="display-4 fw-bold text-dark" th:text="${#numbers.formatDecimal(transaction.amount, 0, 'COMMA', 2, 'POINT')}">0.00</span>
+            <span class="h4 ms-2 text-warning fw-bold" th:text="${transaction.currency}">KZT</span>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-4 border-bottom pb-4">
+          <div class="col-md-4">
+            <div class="small text-muted text-uppercase fw-bold" th:text="#{txn.details.date}">Date & Time</div>
+            <div class="fw-semibold text-dark" th:text="${#temporals.format(transaction.createdAt, 'dd MMM yyyy, HH:mm')}">01 Jan 2024</div>
+          </div>
+          <div class="col-md-4">
+            <div class="small text-muted text-uppercase fw-bold" th:text="#{txn.details.doc}">Source Document</div>
+            <div>
+              <a th:href="@{/documents/{id}(id=${transaction.documentId})}" class="text-warning text-decoration-none fw-bold">
+                <i class="fa-solid fa-file-invoice me-1"></i> <span th:text="#{txn.details.doc.num(${transaction.documentId})}">Doc #1</span>
+              </a>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="small text-muted text-uppercase fw-bold" th:text="#{txn.details.status}">Status</div>
+            <div class="text-success small fw-bold"><i class="fa-solid fa-circle-check me-1"></i> <span th:text="#{txn.details.confirmed}">Confirmed</span></div>
+          </div>
+        </div>
+
+        <div class="edit-section">
+          <h6 class="fw-bold mb-3 text-dark text-uppercase" style="font-size: 12px; letter-spacing: 1px;" th:text="#{txn.details.edit.title}">Edit Information</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" th:text="#{txn.details.label.amount}">Amount</label>
+              <input type="number" class="form-control" id="editAmount" th:value="${transaction.amount}" step="0.01">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" th:text="#{txn.details.label.currency}">Currency</label>
+              <select class="form-select" id="editCurrency">
+                <option value="KZT" th:selected="${transaction.currency == 'KZT'}">KZT (₸)</option>
+                <option value="RUB" th:selected="${transaction.currency == 'RUB'}">RUB (₽)</option>
+                <option value="USD" th:selected="${transaction.currency == 'USD'}">USD ($)</option>
+                <option value="EUR" th:selected="${transaction.currency == 'EUR'}">EUR (€)</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label" th:text="#{txn.details.label.category}">Category</label>
+              <select class="form-select" id="editCategory">
+                <option value="" th:text="#{txn.details.select.cat}">-- Select Category --</option>
+                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:selected="${cat.id.equals(transaction.categoryId)}"></option>
+              </select>
+            </div>
+            <div class="col-12 mt-4">
+              <button class="btn btn-warning px-4 fw-bold" onclick="saveTransaction()" id="saveBtn">
+                <i class="fa-solid fa-floppy-disk me-2"></i> <span th:text="#{txn.details.btn.save}">Save Changes</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="glass-card p-3 shadow-sm sticky-top" style="top: 20px;">
+        <div class="small text-muted text-uppercase fw-bold px-2 mb-3" style="font-size: 11px;" th:text="#{txn.details.mgmt}">Management</div>
+        <div class="d-flex flex-column gap-2">
+          <a th:href="@{/documents/{id}(id=${transaction.documentId})}" class="btn btn-light text-start border d-flex align-items-center gap-2 py-2 px-3 rounded-3">
+            <i class="fa-solid fa-file-lines text-warning"></i>
+            <span th:text="#{txn.details.view.doc}">View Original Document</span>
+          </a>
+          <a th:href="@{/transactions}" class="btn btn-light text-start border d-flex align-items-center gap-2 py-2 px-3 rounded-3">
+            <i class="fa-solid fa-list text-warning"></i>
+            <span th:text="#{txn.details.view.history}">Back to History</span>
+          </a>
+          <hr class="my-2 opacity-50">
+
+          <button class="btn btn-outline-danger text-start d-flex align-items-center gap-2 py-2 px-3 rounded-3 border-1"
+                  th:onclick="'deleteTransaction(' + ${transaction.id} + ')'">
+            <i class="fa-solid fa-trash"></i>
+            <span class="fw-bold" th:text="#{txn.details.btn.delete}">Delete Transaction</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+  <script th:inline="javascript">
+    const txnId = [[${transaction.id}]];
+    const i18n = {
+      confirmDelete: [[#{txn.details.js.confirm.delete}]],
+      deleteError: [[#{txn.details.js.delete.error}]],
+      updateError: [[#{txn.details.js.update.error}]],
+      networkError: [[#{txn.details.js.network.error}]],
+      saving: [[#{txn.details.js.saving}]]
+    };
+
+    async function deleteTransaction(id) {
+      if (confirm(i18n.confirmDelete)) {
+        try {
+          const res = await fetch(`/api/transactions/${id}`, {
+            method: 'DELETE',
+          });
+
+          if (res.ok) {
+            window.location.href = '/transactions';
+          } else {
+            alert(i18n.deleteError);
+          }
+        } catch (err) {
+          alert(i18n.networkError);
+        }
+      }
+    }
+
+    async function saveTransaction() {
+      const btn = document.getElementById('saveBtn');
+      const data = {
+        amount: parseFloat(document.getElementById('editAmount').value),
+        currency: document.getElementById('editCurrency').value,
+        categoryId: document.getElementById('editCategory').value || null
+      };
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${i18n.saving}`;
+
+      try {
+        const res = await fetch(`/api/transactions/${txnId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          document.getElementById('successBox').style.display = 'flex';
+          setTimeout(() => location.reload(), 800);
+        } else {
+          alert(i18n.updateError);
+        }
+      } catch (e) {
+        alert(i18n.networkError);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> ' + [[#{txn.details.btn.save}]];
+      }
+    }
+  </script>
+</th:block>
+</body>
+</html>

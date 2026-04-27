@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{login.page.title}">Login — MVA</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/forms.css">
+    </th:block>
+</head>
+<body layout:fragment="content">
+
+<div class="container mt-5">
+    <div class="card shadow p-4 rounded">
+
+        <h2 class="text-center mb-4 fw-bold text-dark" th:text="#{login.header}">User Login</h2>
+
+        <div id="message" class="alert d-none" role="alert"></div>
+
+        <form id="loginForm">
+            <div class="mb-3">
+                <label for="email" class="form-label" th:text="#{login.label.email}">Email</label>
+                <input type="text" id="email" name="email" class="form-control" th:placeholder="#{login.ph.email}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label" th:text="#{login.label.password}">Password</label>
+                <input type="password" id="password" name="password" class="form-control" th:placeholder="#{login.ph.password}" required>
+            </div>
+
+            <button type="submit" class="btn btn-warning w-100 fw-semibold mt-3" th:text="#{login.btn.submit}">Login</button>
+        </form>
+
+        <p class="text-center mt-3">
+            <span th:text="#{login.footer.no.account}">Don't have an account?</span>
+            <a href="/auth/register" th:text="#{login.footer.register}">Register here</a>
+        </p>
+
+        <p class="text-center mt-3">
+            <span th:text="#{login.footer.forgot}">Forgot password?</span>
+            <a href="/auth/forgot-password" th:text="#{login.footer.reset}">Reset</a>
+        </p>
+
+    </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script th:inline="javascript">
+        const i18n = {
+            success: [[#{login.js.success}]],
+            failed: [[#{login.js.failed}]],
+            error: [[#{login.js.error}]]
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            const messageDiv = document.getElementById('message');
+
+            if (!loginForm || !messageDiv) return;
+
+            loginForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                const formData = new FormData(this);
+                const loginData = {
+                    email: formData.get('email'),
+                    password: formData.get('password')
+                };
+
+                messageDiv.innerHTML = '';
+                messageDiv.className = 'alert d-none';
+
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(loginData)
+                    });
+
+                    if (response.ok) {
+                        const authResponse = await response.json();
+
+                        if (typeof setToken === 'function') {
+                            setToken(authResponse.token);
+                            setUser({
+                                email: authResponse.email,
+                                userId: authResponse.userId,
+                                roles: [authResponse.role]
+                            });
+
+                            messageDiv.innerHTML = i18n.success;
+                            messageDiv.className = 'alert alert-success';
+                            messageDiv.classList.remove('d-none');
+
+                            setTimeout(() => {
+                                window.location.href = '/dashboard';
+                            }, 1500);
+                        } else {
+                            localStorage.setItem('token', authResponse.token);
+                            window.location.reload();
+                        }
+                    } else {
+                        let errorMessage = i18n.failed;
+                        try {
+                            const errorText = await response.text();
+                            if (errorText) errorMessage = errorText;
+                        } catch (e) {}
+
+                        messageDiv.innerHTML = errorMessage;
+                        messageDiv.className = 'alert alert-danger';
+                        messageDiv.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    messageDiv.innerHTML = i18n.error + ': ' + error.message;
+                    messageDiv.className = 'alert alert-danger';
+                    messageDiv.classList.remove('d-none');
+                }
+            });
+
+            if (isAuthenticated()) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

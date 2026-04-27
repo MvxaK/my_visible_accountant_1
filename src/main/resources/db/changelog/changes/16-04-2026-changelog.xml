@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.31.xsd"
+        objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+    <changeSet id="1776345793940-1" author="Tima">
+        <createSequence incrementBy="1" sequenceName="alerts_rules_id_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1776345793940-2" author="Tima">
+        <createSequence incrementBy="1" sequenceName="categories_id_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1776345793940-3" author="Tima">
+        <createSequence incrementBy="1" sequenceName="documents_id_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1776345793940-4" author="Tima">
+        <createSequence incrementBy="1" sequenceName="roles_id_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1776345793940-5" author="Tima">
+        <createSequence incrementBy="1" sequenceName="transactions_id_seq" startValue="1"/>
+    </changeSet>
+    <changeSet id="1776345793940-6" author="Tima">
+        <createSequence incrementBy="1" sequenceName="users_id_seq" startValue="1"/>
+    </changeSet>
+
+    <changeSet id="1776345793940-7" author="Tima">
+        <createTable tableName="alerts_rules">
+            <column name="currency" type="VARCHAR"/>
+            <column name="is_active" type="BOOLEAN"/>
+            <column name="threshold_amount" type="NUMBER(38, 2)"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="created_at" type="timestamp"/>
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="alerts_rules_pkey"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1776345793940-8" author="Tima">
+        <createTable tableName="categories">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="categories_pkey"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+            <column name="description" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="type" type="VARCHAR"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1776345793940-9" author="Tima">
+        <createTable tableName="documents">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="documents_pkey"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+            <column name="document_type" type="VARCHAR(255)"/>
+            <column name="file_path" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="created_at" type="timestamp"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1776345793940-10" author="Tima">
+        <createTable tableName="roles">
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="roles_pkey"/>
+            </column>
+            <column name="role" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1776345793940-11" author="Tima">
+        <createTable tableName="transactions">
+            <column name="amount" type="NUMBER(38, 2)"/>
+            <column name="currency" type="VARCHAR"/>
+            <column name="category_id" type="BIGINT"/>
+            <column name="created_at" type="timestamp"/>
+            <column name="document_id" type="BIGINT"/>
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="transactions_pkey"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1776345793940-12" author="Tima">
+        <createTable tableName="users">
+            <column name="created_at" type="timestamp"/>
+            <column autoIncrement="true" name="id" type="BIGINT">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="users_pkey"/>
+            </column>
+            <column name="role_id" type="BIGINT"/>
+            <column name="email" type="VARCHAR(255)"/>
+            <column name="password_hash" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+    <changeSet id="1776345793940-13" author="Tima">
+        <addUniqueConstraint columnNames="category_id" constraintName="alerts_rules_category_id_key"
+                             tableName="alerts_rules"/>
+    </changeSet>
+    <changeSet id="1776345793940-14" author="Tima">
+        <addUniqueConstraint columnNames="document_id" constraintName="transactions_document_id_key"
+                             tableName="transactions"/>
+    </changeSet>
+    <changeSet id="1776345793940-15" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="alerts_rules"
+                                 constraintName="fkf5y1fohjt3nso3umvahtubgae" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1776345793940-16" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="categories"
+                                 constraintName="fkghuylkwuedgl2qahxjt8g41kb" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1776345793940-17" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="documents"
+                                 constraintName="fkkxttj4tp5le2uth212lu49vny" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1776345793940-18" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="document_id" baseTableName="transactions"
+                                 constraintName="fkoye84vi4wmwy3lee187ukdoxl" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="documents"/>
+    </changeSet>
+    <changeSet id="1776345793940-19" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="users"
+                                 constraintName="fkp56c1712k691lhsyewcssf40f" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="roles"/>
+    </changeSet>
+    <changeSet id="1776345793940-20" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="transactions"
+                                 constraintName="fkqwv7rmvc8va8rep7piikrojds" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="users"/>
+    </changeSet>
+    <changeSet id="1776345793940-21" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="category_id" baseTableName="transactions"
+                                 constraintName="fksqqi7sneo04kast0o138h19mv" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="categories"/>
+    </changeSet>
+    <changeSet id="1776345793940-22" author="Tima">
+        <addForeignKeyConstraint baseColumnNames="category_id" baseTableName="alerts_rules"
+                                 constraintName="fktepmk340b0j914cnyo70jl73x" onDelete="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="categories"/>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <title th:text="#{txns.page.title}">Transactions — My Visible Accountant</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/dashboard.css">
+        <link rel="stylesheet" href="/css/transactions.css">
+    </th:block>
+</head>
+
+<body layout:fragment="content">
+<div class="container my-4">
+
+    <div class="page-header d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <div class="page-title" th:text="#{txns.header}">Transactions</div>
+            <div class="page-subtitle text-muted" th:text="${isAdmin} ? #{txns.subtitle.admin} : #{txns.subtitle.user}">
+            </div>
+        </div>
+        <a th:href="@{/documents/upload}" class="btn btn-warning fw-bold px-4 rounded-pill">
+            <i class="fa-solid fa-plus me-2"></i> <span th:text="#{txns.btn.new}">New Transaction</span>
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4" th:if="${transactions != null and !transactions.isEmpty()}">
+        <div class="col-md-4">
+            <div class="summary-card p-4 shadow-sm">
+                <div class="summary-label mb-1" th:text="#{txns.stat.records}">Records</div>
+                <div class="summary-value" th:text="${transactions.size()}">0</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="summary-card p-4 shadow-sm">
+                <div class="summary-label mb-1" th:text="#{txns.stat.categories}">Categories</div>
+                <div class="summary-value" th:text="${categories != null ? categories.size() : 0}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card p-3 mb-4 shadow-sm d-flex flex-wrap gap-3 align-items-center">
+        <div class="search-wrapper">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" class="form-control search-input" id="searchInput"
+                   th:placeholder="#{txns.filter.search.ph}" oninput="filterTransactions()">
+        </div>
+
+        <div class="d-flex gap-2 ms-auto">
+            <select class="form-select form-select-sm" id="categoryFilter" onchange="filterTransactions()" style="min-width: 160px; border-radius: 10px;">
+                <option value="" th:text="#{txns.filter.cat.all}">All Categories</option>
+                <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+            </select>
+
+            <select class="form-select form-select-sm" id="currencyFilter" onchange="filterTransactions()" style="width: 120px; border-radius: 10px;">
+                <option value="" th:text="#{txns.filter.cur.all}">Currency</option>
+                <option value="KZT">KZT (₸)</option>
+                <option value="RUB">RUB (₽)</option>
+                <option value="USD">USD ($)</option>
+                <option value="EUR">EUR (€)</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="glass-card p-5 text-center" th:if="${transactions == null or transactions.isEmpty()}">
+        <div class="text-warning mb-3" style="font-size: 3rem;"><i class="fa-solid fa-receipt"></i></div>
+        <h4 th:text="#{txns.empty.title}">No transactions found</h4>
+        <p class="text-muted" th:text="#{txns.empty.desc}">Start by uploading your first receipt for AI processing.</p>
+        <a th:href="@{/documents/upload}" class="btn btn-warning px-4 fw-bold rounded-pill" th:text="#{txns.btn.upload}">Upload Document</a>
+    </div>
+
+    <div class="glass-card shadow-sm overflow-hidden" th:if="${transactions != null and !transactions.isEmpty()}">
+        <div class="px-4 py-3 border-bottom d-flex justify-content-between align-items-center bg-light bg-opacity-50">
+            <h6 class="mb-0 fw-bold text-dark text-uppercase small" style="letter-spacing: 1px;" th:text="#{txns.table.title}">Recent Activity</h6>
+            <span class="badge bg-white text-dark border fw-normal">
+                <span id="visibleCount" th:text="${transactions.size()}"></span> <span th:text="#{txns.table.items}">items</span>
+            </span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle mb-0" id="txnTable">
+                <thead class="table-light">
+                <tr>
+                    <th class="ps-4" th:text="#{txns.th.amount}">Amount</th>
+                    <th th:text="#{txns.th.category}">Category</th>
+                    <th th:text="#{txns.th.source}">Source</th>
+                    <th th:text="#{txns.th.date}">Date</th>
+                    <th class="text-end pe-4" th:text="#{txns.th.actions}">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="txn : ${transactions}" class="txn-row"
+                    th:data-amount="${txn.amount}"
+                    th:data-currency="${txn.currency}"
+                    th:data-category="${txn.categoryId}"
+                    th:onclick="|goToTxn(${txn.id})|">
+
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark">
+                            <span th:text="${#numbers.formatDecimal(txn.amount, 0, 'COMMA', 2, 'POINT')}"></span>
+                            <span class="text-warning small ms-1" th:text="${txn.currency}"></span>
+                        </div>
+                    </td>
+                    <td>
+                        <span th:text="${categoryMap != null ? categoryMap.get(txn.categoryId) : '—'}"></span>
+                    </td>
+                    <td>
+                        <a th:href="@{/documents/{id}(id=${txn.documentId})}" class="text-muted small text-decoration-none d-flex align-items-center gap-1" onclick="event.stopPropagation()">
+                            <i class="fa-solid fa-file-invoice"></i> <span th:text="#{txns.table.doc.num(${txn.documentId})}">Doc #1</span>
+                        </a>
+                    </td>
+                    <td class="text-muted small" th:text="${#temporals.format(txn.createdAt, 'dd MMM yyyy')}"></td>
+                    <td class="text-end pe-4" onclick="event.stopPropagation()">
+                        <div class="d-flex justify-content-end gap-2">
+                            <a th:href="@{/transactions/{id}(id=${txn.id})}" class="btn btn-sm btn-light border" th:title="#{txns.btn.view}">
+                                <i class="fa-solid fa-eye"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger" th:onclick="|event.stopPropagation(); deleteTransaction(${txn.id})|" th:title="#{txns.btn.delete}">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="noResults" class="p-5 text-center text-muted" style="display:none;">
+            <i class="fa-solid fa-magnifying-glass mb-2 d-block" style="font-size: 2rem;"></i>
+            <span th:text="#{txns.filter.no.results}">Nothing matches your filters.</span>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script th:inline="javascript">
+        const i18n = {
+            confirmDelete: [[#{txns.js.confirm.delete}]],
+                deleteFailed: [[#{txns.js.delete.fail}]],
+                connError: [[#{txns.js.conn.error}]]
+            };
+
+        function goToTxn(id) { window.location.href = '/transactions/' + id; }
+
+        async function deleteTransaction(id) {
+            if (confirm(i18n.confirmDelete)) {
+                try {
+                    const res = await fetch(`/api/transactions/${id}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (res.ok) {
+                        const row = document.querySelector(`tr[onclick*="goToTxn(${id})"]`);
+                        if (row) {
+                            row.style.opacity = '0';
+                            setTimeout(() => {
+                                row.remove();
+                                filterTransactions();
+                            }, 300);
+                        } else {
+                            location.reload();
+                        }
+                    } else {
+                        alert(i18n.deleteFailed);
+                    }
+                } catch (e) {
+                    alert(i18n.connError);
+                }
+            }
+        }
+
+        function filterTransactions() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const catId = document.getElementById('categoryFilter').value;
+            const currency = document.getElementById('currencyFilter').value.toUpperCase();
+            const rows = document.querySelectorAll('#txnTable tbody tr:not(#noResultsRow)');
+            let visible = 0;
+
+            rows.forEach(row => {
+                const rowCat = row.dataset.category || '';
+                const rowCur = (row.dataset.currency || '').toUpperCase();
+                const text = row.textContent.toLowerCase();
+
+                const matchSearch = !search || text.includes(search);
+                const matchCat = !catId || rowCat === catId;
+                const matchCurrency = !currency || rowCur === currency;
+
+                const show = matchSearch && matchCat && matchCurrency;
+                row.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+
+            document.getElementById('visibleCount').textContent = visible;
+            document.getElementById('noResults').style.display = visible === 0 ? 'block' : 'none';
+        }
+    </script>
+</th:block>
+</body>
+</html>

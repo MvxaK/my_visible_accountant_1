@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <title th:text="#{main.page.title}">Main — My Visible Accountant</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/index.css">
+    </th:block>
+</head>
+
+<body layout:fragment="content">
+
+<header class="position-relative">
+    <div class="hero px-3">
+        <h1 class="display-3 fw-bold text-light mb-3" th:text="#{main.hero.title}">Управляйте деньгами с умом</h1>
+        <p class="lead mb-4 text-light" style="max-width: 700px;" th:text="#{main.hero.subtitle}">Автоматизируйте учет расходов, сканируйте чеки и получайте детальную аналитику ваших финансов в один клик.</p>
+        <div>
+            <a th:href="@{/dashboard}" class="btn btn-warning fw-semibold px-4 py-2 rounded-pill shadow me-2" th:text="#{main.hero.btn.charts}">
+                К графикам
+            </a>
+            <a href="#about" class="btn btn-outline-light fw-semibold px-4 py-2 rounded-pill shadow" th:text="#{main.hero.btn.more}">
+                Узнать больше
+            </a>
+        </div>
+    </div>
+</header>
+
+<section id="about" class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5" th:text="#{main.about.title}">О My Visible Accountant</h2>
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <h3 class="fw-semibold mb-3" th:text="#{main.about.subtitle}">Технологии на службе вашего бюджета</h3>
+                <p class="text-muted" th:text="#{main.about.text}">Мы помогаем следить за каждой тратой, распределяя транзакции по категориям и предупреждая о превышении лимитов через Email.</p>
+            </div>
+            <div class="col-lg-6">
+                <img src="/images/main.jpeg" th:alt="#{main.about.img.alt}" class="img-fluid rounded shadow">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="advantages" class="py-5 bg-white">
+    <div class="container">
+        <h2 class="text-center fw-bold mb-5" th:text="#{main.adv.title}">Почему выбирают нас</h2>
+        <div class="row g-4 text-center">
+            <div class="col-md-3 col-sm-6">
+                <div class="p-4 glass-card h-100">
+                    <i class="fa-solid fa-camera-retro feature-icon mb-3"></i>
+                    <h5 class="fw-semibold mb-2" th:text="#{main.adv.ocr.title}">OCR Сканер</h5>
+                    <p class="text-muted small" th:text="#{main.adv.ocr.desc}">Просто загрузите фото чека, и мы сами вычтем сумму и дату.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-4 glass-card h-100">
+                    <i class="fa-solid fa-bell feature-icon mb-3"></i>
+                    <h5 class="fw-semibold mb-2" th:text="#{main.adv.alerts.title}">Email Алерты</h5>
+                    <p class="text-muted small" th:text="#{main.adv.alerts.desc}">Мы пришлем письмо, если вы потратите больше запланированного.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-4 glass-card h-100">
+                    <i class="fa-solid fa-chart-pie feature-icon mb-3"></i>
+                    <h5 class="fw-semibold mb-2" th:text="#{main.adv.charts.title}">Аналитика</h5>
+                    <p class="text-muted small" th:text="#{main.adv.charts.desc}">Наглядные графики ваших трат по категориям каждый месяц.</p>
+                </div>
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="p-4 glass-card h-100">
+                    <i class="fa-solid fa-shield-halved feature-icon mb-3"></i>
+                    <h5 class="fw-semibold mb-2" th:text="#{main.adv.secure.title}">Безопасность</h5>
+                    <p class="text-muted small" th:text="#{main.adv.secure.desc}">Ваши данные защищены.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</body>
+</html>

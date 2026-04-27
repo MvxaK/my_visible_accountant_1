@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{reg.page.title}">Register — MVA</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/forms.css">
+    </th:block>
+</head>
+<body layout:fragment="content">
+
+<div class="container mt-5">
+    <div class="card shadow p-4 rounded">
+
+        <h2 class="text-center mb-4 fw-bold text-dark" th:text="#{reg.header}">Create Account</h2>
+
+        <div id="message" class="alert d-none" role="alert"></div>
+
+        <form id="registerForm">
+            <div class="mb-3">
+                <label for="email" class="form-label" th:text="#{reg.label.email}">Email</label>
+                <input type="email" id="email" name="email" class="form-control" th:placeholder="#{reg.ph.email}" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="password" class="form-label" th:text="#{reg.label.password}">Password</label>
+                <input type="password" id="password" name="password" class="form-control" th:placeholder="#{reg.ph.password}" required>
+            </div>
+
+            <button type="button" id="registerBtn" class="btn btn-warning w-100 fw-semibold mt-3" th:text="#{reg.btn.submit}">Register</button>
+        </form>
+
+        <p class="text-center mt-3">
+            <span th:text="#{reg.footer.have.account}">Already have an account?</span>
+            <a href="/auth/login" th:text="#{reg.footer.login}">Login here</a>
+        </p>
+
+    </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script th:inline="javascript">
+        const i18n = {
+            validationError: [[#{reg.js.validation.error}]],
+            success: [[#{reg.js.success}]],
+            failed: [[#{reg.js.failed}]],
+            networkError: [[#{reg.js.network.error}]],
+            btnProcessing: [[#{reg.js.btn.processing}]],
+            btnDefault: [[#{reg.btn.submit}]]
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const registerForm = document.getElementById('registerForm');
+            const registerBtn = document.getElementById('registerBtn');
+            const messageDiv = document.getElementById('message');
+
+            function displayMessage(text, type) {
+                messageDiv.innerHTML = text;
+                messageDiv.classList.remove('d-none', 'alert-success', 'alert-danger');
+                if (type === 'success') {
+                    messageDiv.classList.add('alert-success');
+                } else if (type === 'error') {
+                    messageDiv.classList.add('alert-danger');
+                }
+            }
+
+            registerBtn.addEventListener('click', async function() {
+                const formData = new FormData(registerForm);
+                const registerData = {
+                    email: formData.get('email'),
+                    password: formData.get('password')
+                };
+
+                displayMessage('', 'd-none');
+
+                if (!registerData.email || !registerData.password) {
+                    displayMessage(i18n.validationError, 'error');
+                    return;
+                }
+
+                try {
+                    registerBtn.disabled = true;
+                    registerBtn.textContent = i18n.btnProcessing;
+
+                    const response = await fetch('/api/auth/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(registerData)
+                    });
+
+                    if (response.ok) {
+                        const authResponse = await response.json();
+
+                        setToken(authResponse.token);
+                        setUser({
+                            email: authResponse.email,
+                            userId: authResponse.userId,
+                            roles: authResponse.roles || ['ROLE_USER']
+                        });
+
+                        displayMessage(i18n.success, 'success');
+                        registerForm.reset();
+
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+
+                    } else {
+                        let errorMessage = i18n.failed;
+                        try {
+                            const errorText = await response.text();
+                            if (errorText) {
+                                errorMessage = errorText.length > 200 ? i18n.failed : errorText;
+                            }
+                        } catch (e) {}
+                        displayMessage(errorMessage, 'error');
+                    }
+                } catch (error) {
+                    displayMessage(i18n.networkError + ': ' + error.message, 'error');
+                } finally {
+                    registerBtn.disabled = false;
+                    registerBtn.textContent = i18n.btnDefault;
+                }
+            });
+
+            if (isAuthenticated()) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</th:block>
+</body>
+</html>

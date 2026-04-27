@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}" xmlns:layout="http://www.w3.org/1999/xhtml">
+<head>
+    <title th:text="#{admin.users.title}">Manage Users — Admin</title>
+</head>
+<body>
+<main layout:fragment="content">
+    <div class="container py-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold"><i class="bi bi-shield-lock me-2"></i><span th:text="#{admin.users.header}">User Management</span></h2>
+            <button class="btn btn-warning fw-bold" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                <i class="bi bi-plus-lg me-1"></i> <span th:text="#{admin.users.btn.create}">Create User</span>
+            </button>
+        </div>
+
+        <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title" th:text="#{admin.modal.create.title}">Create New User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <form id="adminCreateUserForm">
+                            <div class="mb-3">
+                                <label class="form-label" th:text="#{admin.modal.label.email}">Email address</label>
+                                <input type="email" class="form-control" id="adminNewEmail" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" th:text="#{admin.modal.label.password}">Password</label>
+                                <input type="password" class="form-control" id="adminNewPassword" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label" th:text="#{admin.modal.label.role}">Role</label>
+                                <select class="form-select" id="adminNewRole">
+                                    <option value="ROLE_USER" th:text="#{admin.role.user}">User</option>
+                                    <option value="ROLE_ADMIN" th:text="#{admin.role.admin}">Admin</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-warning w-100 fw-bold" th:text="#{admin.modal.btn.submit}">Create</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                <tr>
+                    <th th:text="#{admin.table.user}">User</th>
+                    <th th:text="#{admin.table.role}">Role</th>
+                    <th th:text="#{admin.table.status}">Status</th>
+                    <th class="text-end" th:text="#{admin.table.actions}">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}" class="user-row">
+                    <td th:onclick="|window.location.href='/admin/users/' + ${user.id} + '/profile'|" style="cursor: pointer;">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-dark" th:text="${user.email}">user@example.com</div>
+                                <small class="text-muted" th:text="#{admin.table.id(${user.id})}">ID: 1</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge rounded-pill border text-dark bg-light" th:text="${user.role}">USER</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success-subtle text-success border-success-subtle" th:text="#{admin.status.active}">Active</span>
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group">
+                            <a th:href="@{'/admin/users/' + ${user.id} + '/profile'}" class="btn btn-sm btn-outline-dark" th:title="#{admin.btn.view}">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteUser(' + ${user.id} + ')'" th:title="#{admin.btn.delete}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script th:inline="javascript">
+        const i18n = {
+            confirmDelete: [[#{admin.js.confirm.delete}]],
+            deleteError: [[#{admin.js.delete.error}]],
+            createSuccess: [[#{admin.js.create.success}]],
+            genericError: [[#{admin.js.error}]]
+        };
+
+        async function deleteUser(id) {
+            if (!confirm(i18n.confirmDelete)) return;
+            try {
+                const response = await fetch(`/api/users/${id}`, { method: 'DELETE' });
+                if (response.ok) location.reload();
+                else alert(i18n.deleteError);
+            } catch (e) { console.error(e); }
+        }
+
+        document.getElementById('adminCreateUserForm').onsubmit = async function(e) {
+            e.preventDefault();
+            const data = {
+                email: document.getElementById('adminNewEmail').value,
+                password: document.getElementById('adminNewPassword').value,
+                role: document.getElementById('adminNewRole').value
+            };
+
+            try {
+                const response = await fetch('/api/users/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert(i18n.createSuccess);
+                    location.reload();
+                } else {
+                    const err = await response.text();
+                    alert(i18n.genericError + ': ' + err);
+                }
+            } catch (error) {
+                console.error('Request failed', error);
+            }
+        };
+    </script>
+</th:block>
+</body>
+</html>

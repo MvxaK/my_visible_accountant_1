@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap');
+
+:root {
+    --bg-main:       #1c1814;
+    --bg-sidebar:    #252017;
+    --bg-card:       rgba(249, 172, 103, 0.05);
+    --bg-card-hover: rgba(249, 172, 103, 0.08);
+    --bg-topbar:     rgba(28, 24, 20, 0.95);
+
+    --border:        rgba(249, 172, 103, 0.12);
+    --border-hover:  rgba(249, 172, 103, 0.25);
+
+    --accent:        #EE6A59;
+    --accent-soft:   rgba(238, 106, 89, 0.12);
+    --accent-hover:  #d95f4a;
+    --amber:         #F9AC67;
+    --amber-soft:    rgba(249, 172, 103, 0.1);
+    --cream:         #ECE6CD;
+
+    --text-primary:  #ECE6CD;
+    --text-muted:    rgba(236, 230, 205, 0.5);
+    --text-faint:    rgba(236, 230, 205, 0.25);
+
+    --sidebar-w:     230px;
+    --topbar-h:      60px;
+    --radius:        10px;
+    --radius-lg:     16px;
+
+    --font-body:     'DM Sans', sans-serif;
+    --font-display:  'DM Serif Display', serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-main);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; border-radius: var(--radius); border: 1px solid transparent;
+    font-family: var(--font-body); font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.2s; text-decoration: none;
+}
+
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 5px 15px rgba(238, 106, 89, 0.3); }
+
+.btn-ghost { background: transparent; border-color: var(--border); color: var(--text-muted); }
+.btn-ghost:hover { border-color: var(--border-hover); color: var(--cream); background: var(--amber-soft); }
+
+.form-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: block; }
+.form-control {
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: var(--radius);
+    color: var(--cream); font-family: var(--font-body); font-size: 14px; padding: 11px 14px;
+    transition: all 0.2s; width: 100%;
+}
+.form-control:focus { outline: none; border-color: var(--amber); background: rgba(255,255,255,0.06); box-shadow: 0 0 0 3px rgba(249,172,103,0.05); }
+
+.glass-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); transition: all 0.2s; }
+.glass-card:hover { border-color: var(--border-hover); background: var(--bg-card-hover); }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--amber-soft); }

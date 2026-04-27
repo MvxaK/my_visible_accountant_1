@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <title th:text="#{dash.page.title}">Dashboard — MVA</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/dashboard.css">
+    </th:block>
+</head>
+
+<body layout:fragment="content">
+<div class="container my-4">
+
+    <div class="alert-banner mb-3" th:if="${triggeredAlerts != null and triggeredAlerts > 0}">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div class="alert-banner-text">
+            <strong th:text="${triggeredAlerts}">1</strong> <span th:text="#{dash.alert.triggered}">alert rule(s) triggered. Check your limits.</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white" onclick="this.closest('.alert-banner').remove()"></button>
+    </div>
+
+    <div class="page-header mb-4">
+        <div>
+            <div class="page-title" th:text="#{dash.header.title}">Financial Overview</div>
+            <div class="page-subtitle" th:text="#{dash.header.subtitle}">Tracking your income and expenses in real-time</div>
+        </div>
+    </div>
+
+    <div class="stat-grid mb-4">
+        <div class="glass-card p-3 border-start border-warning border-1">
+            <div class="stat-card-header d-flex justify-content-between align-items-center">
+                <div class="small text-muted text-uppercase" th:text="#{dash.stat.balance}">Net Balance</div>
+                <div class="stat-icon si-amber"><i class="fa-solid fa-scale-balanced"></i></div>
+            </div>
+            <div class="stat-value" th:text="${#numbers.formatDecimal(netBalance, 1, 'COMMA', 0, 'POINT')}">0</div>
+            <div class="stat-trend" th:classappend="${netBalance >= 0 ? 'trend-up' : 'trend-warn'}">
+                <i th:classappend="${netBalance >= 0 ? 'fa-solid fa-arrow-up' : 'fa-solid fa-arrow-down'}"></i>
+                <span th:text="${netBalance >= 0 ? ' ' + #messages.msg('dash.stat.surplus') : ' ' + #messages.msg('dash.stat.deficit')}"></span>
+            </div>
+        </div>
+
+        <div class="glass-card p-3 border-start border-success border-1">
+            <div class="stat-card-header d-flex justify-content-between align-items-center">
+                <div class="small text-muted text-uppercase" th:text="#{dash.stat.income}">Total Income</div>
+                <div class="stat-icon si-income"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+            </div>
+            <div class="stat-value" th:text="${#numbers.formatDecimal(totalIncome, 1, 'COMMA', 0, 'POINT')}">0</div>
+        </div>
+
+        <div class="glass-card p-3 border-start border-danger border-1">
+            <div class="stat-card-header d-flex justify-content-between align-items-center">
+                <div class="small text-muted text-uppercase" th:text="#{dash.stat.expenses}">Total Expenses</div>
+                <div class="stat-icon si-accent"><i class="fa-solid fa-cart-shopping"></i></div>
+            </div>
+            <div class="stat-value" th:text="${#numbers.formatDecimal(totalSpending, 1, 'COMMA', 0, 'POINT')}">0</div>
+        </div>
+    </div>
+
+    <div class="chart-grid-dual mb-5">
+        <div class="glass-card p-3">
+            <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted small fw-bold" th:text="#{dash.chart.monthly.exp}">MONTHLY EXPENSES</span>
+                <span class="badge badge-expense" th:text="#{dash.chart.type.bar}">Bar Chart</span>
+            </div>
+            <canvas id="expenseMonthlyChart"></canvas>
+        </div>
+
+        <div class="glass-card p-3">
+            <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted small fw-bold" th:text="#{dash.chart.cat.exp}">EXPENSE CATEGORIES</span>
+                <span class="badge badge-expense" th:text="#{dash.chart.type.doughnut}">Doughnut</span>
+            </div>
+            <canvas id="expenseCategoryChart"></canvas>
+        </div>
+
+        <div class="glass-card p-3">
+            <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted small fw-bold" th:text="#{dash.chart.monthly.inc}">MONTHLY INCOME</span>
+                <span class="badge badge-income" th:text="#{dash.chart.type.bar}">Bar Chart</span>
+            </div>
+            <canvas id="incomeMonthlyChart"></canvas>
+        </div>
+
+        <div class="glass-card p-3">
+            <div class="chart-header d-flex justify-content-between align-items-center mb-3">
+                <span class="text-muted small fw-bold" th:text="#{dash.chart.cat.inc}">INCOME CATEGORIES</span>
+                <span class="badge badge-income" th:text="#{dash.chart.type.doughnut}">Doughnut</span>
+            </div>
+            <canvas id="incomeCategoryChart"></canvas>
+        </div>
+    </div>
+
+    <div class="txn-table-container glass-card">
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+            <span class="small text-uppercase text-muted fw-bold" th:text="#{dash.table.title}">Recent Transactions</span>
+            <a th:href="@{/transactions}" class="text-amber small text-decoration-none" th:text="#{dash.table.view.all}">View all →</a>
+        </div>
+        <table class="table table-borderless mb-0">
+            <thead>
+            <tr>
+                <th class="ps-4" th:text="#{dash.table.col.cat}">Category</th>
+                <th th:text="#{dash.table.col.date}">Date</th>
+                <th class="text-end pe-4" th:text="#{dash.table.col.amt}">Amount</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="txn : ${recentTransactions}">
+                <td class="ps-4">
+                    <span class="category-pill">
+                        <i class="fa-solid fa-circle-dot me-1" style="font-size: 8px;"></i>
+                        <span th:text="${categoryMap.get(txn.categoryId) != null ? categoryMap.get(txn.categoryId).name : #messages.msg('dash.table.uncategorized')}">Category</span>
+                    </span>
+                </td>
+                <td th:text="${#temporals.format(txn.createdAt, 'dd MMM yyyy')}">Date</td>
+                <td class="text-end pe-4">
+                    <th:block th:if="${categoryMap.get(txn.categoryId) != null}">
+                        <span th:class="${categoryMap.get(txn.categoryId).type.name() == 'INCOME' ? 'amt-income' : 'amt-expense'}"
+                              th:text="${(categoryMap.get(txn.categoryId).type.name() == 'INCOME' ? '+' : '-') + #numbers.formatDecimal(txn.amount, 0, 'COMMA', 2, 'POINT') + ' ' + txn.currency}">
+                        </span>
+                    </th:block>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        const i18n = {
+            expenses: [[#{dash.chart.label.expenses}]],
+            income: [[#{dash.chart.label.income}]]
+        };
+
+        const monthLabels = /*[[${monthLabels}]]*/ [];
+        const expenseData = /*[[${expenseData}]]*/ [];
+        const incomeData  = /*[[${incomeData}]]*/ [];
+
+        const expCatLabels = /*[[${categoryLabels}]]*/ [];
+        const expCatValues = /*[[${categoryData}]]*/ [];
+
+        const incCatLabels = /*[[${incomeCategoryLabels}]]*/ [];
+        const incCatValues = /*[[${incomeCategoryData}]]*/ [];
+
+        const EXP_COLOR = '#EE6A59';
+        const INC_COLOR = '#28a745';
+        const EXP_CAT_COLORS = ['#D32F2F', '#F57C00', '#7B1FA2', '#AFB42B', '#C2185B', '#5D4037'];
+        const INC_CAT_COLORS = ['#1B5E20', '#1976D2', '#00796B', '#303F9F', '#0097A7', '#388E3C'];
+
+        Chart.defaults.color = '#6c757d';
+        Chart.defaults.font.family = "'DM Sans', sans-serif";
+
+        function createBarChart(canvasId, label, data, baseColor) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 200);
+            grad.addColorStop(0, baseColor + 'CC');
+            grad.addColorStop(1, baseColor + '10');
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: monthLabels,
+                    datasets: [{
+                        label: label,
+                        data: data,
+                        backgroundColor: grad,
+                        borderColor: baseColor,
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.03)' }, border: { display: false } },
+                        x: { grid: { display: false }, border: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function createDoughnut(canvasId, labels, data, colors) {
+            new Chart(document.getElementById(canvasId), {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        hoverOffset: 10,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '75%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15, font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+
+        createBarChart('expenseMonthlyChart', i18n.expenses, expenseData, EXP_COLOR);
+        createBarChart('incomeMonthlyChart', i18n.income, incomeData, INC_COLOR);
+        createDoughnut('expenseCategoryChart', expCatLabels, expCatValues, EXP_CAT_COLORS);
+        createDoughnut('incomeCategoryChart', incCatLabels, incCatValues, INC_CAT_COLORS);
+    </script>
+</th:block>
+</body>
+</html>

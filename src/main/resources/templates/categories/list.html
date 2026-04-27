@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <title th:text="#{cat.page.title}">Categories — My Visible Accountant</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/dashboard.css">
+        <link rel="stylesheet" href="/css/categories.css">
+    </th:block>
+</head>
+
+<body layout:fragment="content">
+<div class="container my-4">
+
+    <div class="page-header mb-4">
+        <div class="page-title" th:text="#{cat.header}">Categories</div>
+        <div class="page-subtitle" th:text="#{cat.subtitle}">Manage your spending classes or add a new one below</div>
+    </div>
+
+    <div class="glass-card p-3 mb-4">
+        <form id="quickCreateForm" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label" th:text="#{cat.label.name}">Category Name</label>
+                <input type="text" id="newName" class="form-control" th:placeholder="#{cat.ph.name}" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" th:text="#{cat.label.type}">Type</label>
+                <select id="newType" class="form-control" required>
+                    <option value="EXPENSE" th:text="#{cat.type.expense}">Expense</option>
+                    <option value="INCOME" th:text="#{cat.type.income}">Income</option>
+                </select>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label" th:text="#{cat.label.desc}">Description (Optional)</label>
+                <input type="text" id="newDesc" class="form-control" th:placeholder="#{cat.ph.desc}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-warning w-100">
+                    <i class="fa-solid fa-plus me-1"></i> <span th:text="#{cat.btn.add}">Add</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="glass-card txn-table-container">
+        <table class="table table-borderless mb-0">
+            <thead>
+            <tr>
+                <th class="ps-4" th:text="#{cat.table.name}">Name</th>
+                <th th:text="#{cat.table.type}">Type</th>
+                <th th:text="#{cat.table.desc}">Description</th>
+                <th class="text-end pe-4" th:text="#{cat.table.actions}">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="cat : ${categories}" th:id="'row-' + ${cat.id}" class="align-middle">
+                <td class="ps-4">
+                    <span th:text="${cat.name}">Category</span>
+                </td>
+                <td>
+                    <th:block th:if="${cat.type != null}">
+                        <span th:if="${cat.type.name() == 'INCOME'}" class="badge bg-success-subtle text-success border border-success-subtle">
+                            <i class="fa-solid fa-arrow-trend-up me-1"></i> <span th:text="#{cat.type.income}">Income</span>
+                        </span>
+                        <span th:if="${cat.type.name() == 'EXPENSE'}" class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                            <i class="fa-solid fa-arrow-trend-down me-1"></i> <span th:text="#{cat.type.expense}">Expense</span>
+                        </span>
+                    </th:block>
+                    <span th:if="${cat.type == null}" class="badge bg-secondary-subtle text-muted border" th:text="#{cat.type.unknown}">
+                        Unknown
+                    </span>
+                </td>
+                <td th:text="${cat.description}" class="text-muted small">Description</td>
+                <td class="text-end pe-4">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a th:href="@{/categories/{id}/edit(id=${cat.id})}" class="btn btn-sm btn-light border">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteCategory(' + ${cat.id} + ')'">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${categories.isEmpty()}" id="noDataRow">
+                <td colspan="4" class="text-center py-4 text-muted" th:text="#{cat.table.empty}">No categories yet.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script th:inline="javascript">
+        const i18n = {
+            confirmDelete: [[#{cat.js.confirm.delete}]],
+            errorCreate: [[#{cat.js.error.create}]],
+            errorDelete: [[#{cat.js.error.delete}]]
+        };
+
+        document.getElementById('quickCreateForm').onsubmit = function(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('newName').value,
+                type: document.getElementById('newType').value,
+                description: document.getElementById('newDesc').value
+            };
+
+            fetch('/api/category', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(res => {
+                if (res.ok) location.reload();
+                else alert(i18n.errorCreate);
+            });
+        };
+
+        function deleteCategory(id) {
+            if (confirm(i18n.confirmDelete)) {
+                fetch(`/api/category/${id}`, { method: 'DELETE' })
+                    .then(res => {
+                        if (res.ok) {
+                            document.getElementById(`row-${id}`).remove();
+                        } else {
+                            alert(i18n.errorDelete);
+                        }
+                    });
+            }
+        }
+    </script>
+</th:block>
+</body>
+</html>

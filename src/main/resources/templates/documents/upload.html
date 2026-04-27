@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+  <title th:text="#{upload.page.title}">Upload — My Visible Accountant</title>
+  <th:block layout:fragment="page-specific-head">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/documents-ops.css">
+  </th:block>
+</head>
+
+<body layout:fragment="content">
+<div class="container my-4">
+
+  <div class="page-header mb-4">
+    <div>
+      <a th:href="@{/documents}" class="text-muted small text-decoration-none">
+        <i class="fa-solid fa-arrow-left me-1"></i> <span th:text="#{upload.btn.back}">Back</span>
+      </a>
+      <div class="page-title mt-2" th:text="#{upload.header}">Upload Document</div>
+      <div class="page-subtitle" th:text="#{upload.subtitle}">Our AI will automatically extract the transaction details</div>
+    </div>
+  </div>
+
+  <div class="error-box mb-4" id="errorBox" style="display:none;">
+    <i class="fa-solid fa-circle-exclamation"></i> <span id="errorMsg"></span>
+  </div>
+
+  <div class="row">
+    <div class="col-lg-7">
+      <div class="glass-card p-4">
+        <div class="dropzone" id="dropzone"
+             onclick="document.getElementById('fileInput').click()"
+             ondragover="onDragOver(event)"
+             ondragleave="onDragLeave()"
+             ondrop="onDrop(event)">
+
+          <input type="file" id="fileInput" hidden accept=".pdf,.jpg,.jpeg,.png" onchange="onFileSelect(this.files[0])">
+
+          <div class="dropzone-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+          <h4 class="fw-bold" th:text="#{upload.dropzone.title}">Drop your receipt here</h4>
+          <p class="text-muted mb-4" th:text="#{upload.dropzone.desc}">or click to browse files from your computer</p>
+
+          <div class="d-flex justify-content-center gap-2">
+            <span class="format-tag">PDF</span>
+            <span class="format-tag">JPG</span>
+            <span class="format-tag">PNG</span>
+          </div>
+        </div>
+
+        <div class="file-selected shadow-sm" id="fileSelected">
+          <div class="doc-icon pdf" id="fileIconWrapper" style="width: 50px; height: 50px;">
+            <i class="fa-solid fa-file-pdf" id="fileTypeIcon"></i>
+          </div>
+          <div class="flex-grow-1">
+            <div class="fw-bold text-dark" id="fileName" style="font-size: 14px;">filename.pdf</div>
+            <div class="text-muted small" id="fileSize">0.0 KB</div>
+          </div>
+          <button class="btn btn-sm text-danger" onclick="removeFile()"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+
+        <div id="uploadProgressContainer" style="display: none;">
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="d-flex justify-content-between mt-2 px-1">
+            <span class="small text-muted" id="progressLabel" th:text="#{upload.js.uploading}">Uploading...</span>
+            <span class="small fw-bold text-warning" id="progressPct">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="glass-card p-4">
+        <h5 class="fw-bold mb-4" th:text="#{upload.options.title}">Scan Options</h5>
+
+        <div class="mb-3">
+          <label class="form-label" th:text="#{upload.label.name}">Temporary Name</label>
+          <input type="text" class="form-control" id="docName" th:placeholder="#{upload.ph.name}">
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label" th:text="#{upload.label.type}">Document Type</label>
+          <select class="form-select" id="docType">
+            <option value="RECEIPT" selected th:text="#{upload.type.receipt}">Receipt</option>
+            <option value="INVOICE" th:text="#{upload.type.invoice}">Invoice</option>
+            <option value="OTHER" th:text="#{upload.type.other}">Other</option>
+          </select>
+        </div>
+
+        <button class="btn btn-warning w-100 fw-bold py-2 mb-4" id="uploadBtn" onclick="uploadFile()" disabled>
+          <i class="fa-solid fa-magnifying-glass me-2" id="uploadBtnIcon"></i>
+          <span id="uploadBtnText" th:text="#{upload.btn.start}">Start OCR Scan</span>
+        </button>
+
+        <div class="bg-light p-3 rounded-3 border">
+          <div class="fw-bold small mb-2 text-dark" th:text="#{upload.tips.title}">Optimization Tips:</div>
+          <ul class="list-unstyled mb-0" style="font-size: 12px; line-height: 1.8;">
+            <li><i class="fa-solid fa-circle-check text-success me-2"></i> <span th:text="#{upload.tips.1}">Ensure text is sharp and readable</span></li>
+            <li><i class="fa-solid fa-circle-check text-success me-2"></i> <span th:text="#{upload.tips.2}">Avoid shadows on the document</span></li>
+            <li><i class="fa-solid fa-circle-check text-success me-2"></i> <span th:text="#{upload.tips.3}">PDF format is recommended</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+  <script th:inline="javascript">
+    let selectedFile = null;
+    const i18n = {
+      formatError: [[#{upload.js.error.format}]],
+      processFailed: [[#{upload.js.error.process}]],
+      uploading: [[#{upload.js.uploading}]],
+      scanning: [[#{upload.js.scanning}]]
+    };
+
+    function onDragOver(e) { e.preventDefault(); document.getElementById('dropzone').classList.add('dragover'); }
+    function onDragLeave() { document.getElementById('dropzone').classList.remove('dragover'); }
+    function onDrop(e) { e.preventDefault(); document.getElementById('dropzone').classList.remove('dragover'); onFileSelect(e.dataTransfer.files[0]); }
+
+    function onFileSelect(file) {
+      if (!file) return;
+      if (!['application/pdf','image/jpeg','image/png'].includes(file.type)) {
+        showError(i18n.formatError);
+        return;
+      }
+
+      selectedFile = file;
+      document.getElementById('errorBox').style.display = 'none';
+
+      document.getElementById('fileName').textContent = file.name;
+      document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+
+      const icon = document.getElementById('fileTypeIcon');
+      icon.className = file.type === 'application/pdf' ? 'fa-solid fa-file-pdf' : 'fa-solid fa-image';
+
+      document.getElementById('fileSelected').classList.add('show');
+      document.getElementById('dropzone').style.display = 'none';
+      document.getElementById('uploadBtn').disabled = false;
+
+      if(!document.getElementById('docName').value) {
+        document.getElementById('docName').value = file.name.split('.')[0];
+      }
+    }
+
+    function removeFile() {
+      selectedFile = null;
+      document.getElementById('fileSelected').classList.remove('show');
+      document.getElementById('dropzone').style.display = 'block';
+      document.getElementById('uploadBtn').disabled = true;
+      document.getElementById('fileInput').value = '';
+    }
+
+    async function uploadFile() {
+      if (!selectedFile) return;
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      setLoading(true);
+      document.getElementById('progressLabel').textContent = i18n.scanning;
+      animateProgress(0, 80, 2000);
+
+      try {
+        const res = await fetch('/api/documents/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${getToken()}`
+          },
+          body: formData
+        });
+
+        if (!res.ok) throw new Error(i18n.processFailed);
+
+        const data = await res.json();
+
+        sessionStorage.setItem('ocrResult', JSON.stringify({
+          extractedAmount: data.extractedAmount,
+          extractedCurrency: data.extractedCurrency,
+          rawText: data.rawText,
+          fileName: data.fileName,
+          docName: document.getElementById('docName').value,
+          docType: document.getElementById('docType').value
+        }));
+
+        animateProgress(80, 100, 500);
+        setTimeout(() => window.location.href = '/documents/preview', 600);
+
+      } catch (e) {
+        showError(e.message);
+        setLoading(false);
+      }
+    }
+
+    function setLoading(loading) {
+      document.getElementById('uploadBtn').disabled = loading;
+      document.getElementById('uploadProgressContainer').style.display = loading ? 'block' : 'none';
+      document.querySelector('.progress-track').style.display = loading ? 'block' : 'none';
+      document.getElementById('uploadBtnIcon').className = loading ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-magnifying-glass';
+      if (!loading) document.getElementById('uploadBtnText').textContent = [[#{upload.btn.start}]];
+    }
+
+    function animateProgress(from, to, duration) {
+      const fill = document.getElementById('progressFill');
+      const pct = document.getElementById('progressPct');
+      const start = performance.now();
+
+      function step(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = from + (to - from) * progress;
+        fill.style.width = current + '%';
+        pct.textContent = Math.round(current) + '%';
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('errorBox');
+      document.getElementById('errorMsg').textContent = msg;
+      box.style.display = 'flex';
+    }
+  </script>
+</th:block>
+</body>
+</html>

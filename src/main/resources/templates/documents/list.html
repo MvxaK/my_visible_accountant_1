@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+  <title th:text="#{docs.page.title}">Documents — My Visible Accountant</title>
+  <th:block layout:fragment="page-specific-head">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/documents.css">
+  </th:block>
+</head>
+
+<body layout:fragment="content">
+<div class="container my-4">
+
+  <div class="page-header mb-4">
+    <div>
+      <div class="page-title" th:text="#{docs.header}">My Documents</div>
+      <div class="page-subtitle text-muted" th:text="#{docs.subtitle}">Upload and manage your receipts or invoices</div>
+    </div>
+  </div>
+
+  <div class="glass-card p-4 mb-5" style="border-left: 4px solid #ffc107;">
+    <div class="form-label mb-3" th:text="#{docs.upload.title}">Upload New Document</div>
+    <form id="uploadForm" class="row g-3 align-items-center">
+      <div class="col-md-5">
+        <input type="file" id="fileInput" class="form-control" required>
+      </div>
+      <div class="col-md-4">
+        <input type="text" id="docName" class="form-control" th:placeholder="#{docs.upload.ph.name}">
+      </div>
+      <div class="col-md-3">
+        <button type="submit" class="btn btn-warning w-100 fw-bold">
+          <i class="fa-solid fa-cloud-arrow-up me-2"></i> <span th:text="#{docs.upload.btn}">Upload & Process</span>
+        </button>
+      </div>
+    </form>
+    <div id="uploadStatus" class="mt-2 small" style="display:none;"></div>
+  </div>
+
+  <div class="toolbar d-flex justify-content-between align-items-center mb-4">
+    <div class="search-wrapper">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="searchInput" class="form-control ps-5" th:placeholder="#{docs.search.ph}">
+    </div>
+    <div class="text-muted small">
+      <span th:text="#{docs.total}">Total:</span> <span class="fw-bold text-dark" th:text="${documents.size()}">0</span> <span th:text="#{docs.total.unit}">documents</span>
+    </div>
+  </div>
+
+  <div class="docs-grid" id="docsGrid">
+    <div th:each="doc : ${documents}" class="doc-card" th:id="'doc-' + ${doc.id}">
+      <div class="doc-card-top">
+        <div class="doc-icon" th:classappend="${doc.documentType == 'PDF' ? 'pdf' : 'img'}">
+          <i class="fa-solid" th:classappend="${doc.documentType == 'PDF' ? 'fa-file-pdf' : 'fa-image'}"></i>
+        </div>
+        <div class="doc-actions">
+          <a th:href="@{/documents/{id}(id=${doc.id})}" class="btn btn-sm btn-light border" th:title="#{docs.action.view}">
+            <i class="fa-solid fa-eye"></i>
+          </a>
+          <button class="btn btn-sm btn-outline-danger" th:onclick="'deleteDoc(' + ${doc.id} + ')'" th:title="#{docs.action.delete}">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="doc-info">
+        <div class="doc-name" th:text="${doc.name}">document_name.pdf</div>
+        <div class="doc-meta">
+          <span class="doc-type-badge" th:text="${doc.documentType}">PDF</span>
+          <span class="doc-date" th:text="${#temporals.format(doc.createdAt, 'dd.MM.yyyy')}">01.01.2024</span>
+        </div>
+      </div>
+    </div>
+
+    <div th:if="${documents.isEmpty()}" class="empty-state w-100 shadow-none">
+      <i class="fa-solid fa-folder-open"></i>
+      <p th:text="#{docs.empty}">No documents found. Start by uploading one above!</p>
+    </div>
+  </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+  <script th:inline="javascript">
+    const i18n = {
+      ocrProcessing: [[#{docs.js.ocr.processing}]],
+      ocrError: [[#{docs.js.ocr.error}]],
+      uploadFailed: [[#{docs.js.upload.failed}]],
+      connError: [[#{docs.js.conn.error}]],
+      confirmDelete: [[#{docs.js.confirm.delete}]],
+      deleteError: [[#{docs.js.delete.error}]]
+    };
+
+    document.getElementById('uploadForm').onsubmit = async function(e) {
+      e.preventDefault();
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      const name = document.getElementById('docName').value;
+      const status = document.getElementById('uploadStatus');
+
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      status.style.display = 'block';
+      status.className = 'text-warning';
+      status.innerText = i18n.ocrProcessing;
+
+      try {
+        const res = await fetch('/api/documents/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          const saveRes = await fetch('/api/documents/save', {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+              name: name || data.fileName,
+              documentType: data.fileName.split('.').pop().toUpperCase(),
+              filePath: data.fileName
+            })
+          });
+
+          if (saveRes.ok) {
+            location.reload();
+          } else {
+            status.className = 'text-danger';
+            status.innerText = i18n.ocrError;
+          }
+        } else {
+          status.className = 'text-danger';
+          status.innerText = data.error || i18n.uploadFailed;
+        }
+      } catch (err) {
+        status.className = 'text-danger';
+        status.innerText = i18n.connError;
+      }
+    };
+
+    async function deleteDoc(id) {
+      if (confirm(i18n.confirmDelete)) {
+        try {
+          const res = await fetch(`/api/documents/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+          });
+
+          if (res.ok) {
+            const card = document.getElementById(`doc-${id}`);
+            if (card) {
+              card.style.opacity = '0';
+              setTimeout(() => card.remove(), 300);
+            }
+          } else {
+            alert(i18n.deleteError);
+          }
+        } catch (e) {
+          alert(i18n.connError);
+        }
+      }
+    }
+
+    document.getElementById('searchInput').oninput = function() {
+      const val = this.value.toLowerCase();
+      document.querySelectorAll('.doc-card').forEach(card => {
+        const name = card.querySelector('.doc-name').innerText.toLowerCase();
+        card.style.display = name.includes(val) ? 'flex' : 'none';
+      });
+    };
+  </script>
+</th:block>
+</body>
+</html>

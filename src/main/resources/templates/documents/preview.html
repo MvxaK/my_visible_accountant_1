@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html th:lang="${#locale.language}" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <title th:text="#{preview.page.title}">Preview — MVA</title>
+    <th:block layout:fragment="page-specific-head">
+        <link rel="stylesheet" href="/css/dashboard.css">
+        <link rel="stylesheet" href="/css/documents-ops.css">
+    </th:block>
+</head>
+
+<body layout:fragment="content">
+<div class="container my-4">
+
+    <div class="page-header mb-4">
+        <div>
+            <div class="page-title" th:text="#{preview.header}">Review & Save</div>
+            <div class="page-subtitle text-muted" th:text="#{preview.subtitle}">Confirm extracted data before creating a transaction</div>
+        </div>
+    </div>
+
+    <div class="error-box mb-3" id="errorBox" style="display:none;">
+        <i class="fa-solid fa-circle-exclamation"></i> <span id="errorMsg"></span>
+    </div>
+    <div class="success-box mb-3" id="successBox" style="display:none;">
+        <i class="fa-solid fa-circle-check"></i> <span th:text="#{preview.success.msg}">Data saved! Redirecting...</span>
+    </div>
+
+    <div class="glass-card p-5 text-center" id="noDataBox" style="display:none;">
+        <i class="fa-solid fa-file-circle-exclamation text-warning mb-3" style="font-size: 3rem;"></i>
+        <h4 th:text="#{preview.nodata.title}">No data to preview</h4>
+        <p class="text-muted" th:text="#{preview.nodata.desc}">It seems you haven't uploaded a document yet or the session expired.</p>
+        <a th:href="@{/documents}" class="btn btn-warning px-4 fw-bold" th:text="#{preview.btn.go.upload}">Go to Upload</a>
+    </div>
+
+    <div class="row" id="previewLayout">
+        <div class="col-lg-7">
+            <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <label class="form-label mb-0" th:text="#{preview.label.extracted}">Extracted Result</label>
+                    <span class="status-badge status-active">
+                        <i class="fa-solid fa-microchip me-1"></i> <span th:text="#{preview.badge.ocr}">OCR Processed</span>
+                    </span>
+                </div>
+
+                <div id="amountDisplayBox">
+                    <div class="extracted-value mb-2">
+                        <span id="displayAmount">0.00</span>
+                        <span class="text-warning ms-1" id="displayCurrency" style="font-size: 1.2rem;">KZT</span>
+                    </div>
+                    <button class="btn btn-sm btn-light border" onclick="toggleAmountEdit()">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> <span th:text="#{preview.btn.adjust}">Adjust Amount</span>
+                    </button>
+                </div>
+
+                <div class="amount-edit-row" id="amountEditRow">
+                    <input type="number" class="form-control form-control-lg" id="amountInput" step="0.01">
+                    <button class="btn btn-warning" onclick="applyAmountEdit()"><i class="fa-solid fa-check"></i></button>
+                    <button class="btn btn-light border" onclick="toggleAmountEdit()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <hr class="my-4 opacity-5">
+
+                <label class="form-label" th:text="#{preview.label.raw.text}">Raw OCR Text</label>
+                <div class="raw-text-box" id="rawTextBox" th:text="#{preview.loading.text}">Processing text...</div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ops-panel glass-card p-4 shadow-sm">
+                <h5 class="fw-bold mb-4" th:text="#{preview.details.title}">Document Details</h5>
+
+                <div class="mb-3">
+                    <label class="form-label" th:text="#{preview.label.doc.name}">Name on Server</label>
+                    <input type="text" class="form-control" id="saveDocName" th:placeholder="#{preview.ph.doc.name}">
+                    <div class="text-muted mt-1" style="font-size: 10px;" id="fileNamePreview">File: unknown.pdf</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" th:text="#{preview.label.category}">Category</label>
+                    <select class="form-select" id="categorySelect">
+                        <option value="" disabled selected th:text="#{preview.ph.select.cat}">Select a category</option>
+                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"></option>
+                    </select>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-6">
+                        <label class="form-label" th:text="#{preview.label.doc.type}">Doc Type</label>
+                        <select class="form-select" id="saveDocType">
+                            <option value="RECEIPT" th:text="#{preview.type.receipt}">Receipt</option>
+                            <option value="INVOICE" th:text="#{preview.type.invoice}">Invoice</option>
+                            <option value="OTHER" th:text="#{preview.type.other}">Other</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" th:text="#{preview.label.currency}">Currency</label>
+                        <select class="form-select" id="currencySelect">
+                            <option value="KZT">KZT</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="RUB">RUB</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-warning w-100 fw-bold py-2 mb-2" id="saveBtn" onclick="saveAll()">
+                    <i class="fa-solid fa-floppy-disk me-2"></i> <span th:text="#{preview.btn.save}">Save & Create Transaction</span>
+                </button>
+                <a th:href="@{/documents}" class="btn btn-light w-100 border text-muted" th:text="#{preview.btn.discard}">Discard</a>
+
+                <div class="mt-4 p-3 rounded-3 bg-light border">
+                    <div class="small text-muted d-flex gap-2">
+                        <i class="fa-solid fa-circle-info mt-1 text-warning"></i>
+                        <span th:text="#{preview.info.note}">This will create a new document record and an automatic transaction entry.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="page-specific-scripts-bottom">
+    <script th:inline="javascript">
+        const i18n = {
+            source: [[#{preview.js.source}]],
+            noText: [[#{preview.js.no.text}]],
+            invalidAmount: [[#{preview.js.invalid.amount}]],
+            validationError: [[#{preview.js.validation.error}]],
+            saving: [[#{preview.js.saving}]],
+            tryAgain: [[#{preview.js.try.again}]],
+            errorPrefix: [[#{preview.js.error.prefix}]],
+            descPrefix: [[#{preview.js.desc.prefix}]]
+        };
+
+        let ocrData = null;
+        let currentAmount = 0;
+
+        window.onload = () => {
+            const raw = sessionStorage.getItem('ocrResult');
+            if (!raw) {
+                document.getElementById('noDataBox').style.display = 'block';
+                document.getElementById('previewLayout').style.display = 'none';
+                return;
+            }
+            ocrData = JSON.parse(raw);
+
+            currentAmount = parseFloat(ocrData.extractedAmount) || 0;
+            document.getElementById('displayAmount').textContent = currentAmount.toFixed(2);
+            document.getElementById('displayCurrency').textContent = ocrData.extractedCurrency || 'KZT';
+            document.getElementById('rawTextBox').textContent = ocrData.rawText || i18n.noText;
+            document.getElementById('saveDocName').value = ocrData.fileName || '';
+            document.getElementById('fileNamePreview').textContent = i18n.source + ': ' + (ocrData.fileName || 'file');
+            document.getElementById('amountInput').value = currentAmount.toFixed(2);
+
+            if (ocrData.extractedCurrency) {
+                document.getElementById('currencySelect').value = ocrData.extractedCurrency;
+            }
+        };
+
+        function toggleAmountEdit() {
+            const row = document.getElementById('amountEditRow');
+            const display = document.getElementById('amountDisplayBox');
+            const isActive = row.classList.toggle('active');
+            display.style.display = isActive ? 'none' : 'block';
+            if (isActive) document.getElementById('amountInput').focus();
+        }
+
+        function applyAmountEdit() {
+            const val = parseFloat(document.getElementById('amountInput').value);
+            if (isNaN(val) || val < 0) {
+                alert(i18n.invalidAmount);
+                return;
+            }
+            currentAmount = val;
+            document.getElementById('displayAmount').textContent = val.toFixed(2);
+            toggleAmountEdit();
+        }
+
+        async function saveAll() {
+            const name = document.getElementById('saveDocName').value.trim();
+            const catId = document.getElementById('categorySelect').value;
+            const docType = document.getElementById('saveDocType').value;
+            const currency = document.getElementById('currencySelect').value;
+            const btn = document.getElementById('saveBtn');
+
+            if (!name || !catId) {
+                alert(i18n.validationError);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${i18n.saving}`;
+
+            try {
+                const docResponse = await fetch('/api/documents/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        documentType: docType,
+                        filePath: ocrData.fileName
+                    })
+                });
+
+                if (!docResponse.ok) throw new Error('Doc save failed');
+                const savedDoc = await docResponse.json();
+
+                const transResponse = await fetch('/api/transactions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        documentId: savedDoc.id,
+                        categoryId: parseInt(catId),
+                        amount: currentAmount,
+                        currency: currency,
+                        description: i18n.descPrefix + " " + name,
+                        transactionDate: new Date().toISOString().split('T')[0]
+                    })
+                });
+
+                if (!transResponse.ok) throw new Error('Transaction creation failed');
+
+                sessionStorage.removeItem('ocrResult');
+                document.getElementById('successBox').style.display = 'flex';
+                document.getElementById('previewLayout').style.opacity = '0.5';
+                document.getElementById('previewLayout').style.pointerEvents = 'none';
+
+                setTimeout(() => {
+                    window.location.href = '/documents';
+                }, 1500);
+
+            } catch (e) {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-floppy-disk me-2"></i> ${i18n.tryAgain}`;
+                alert(i18n.errorPrefix + ': ' + e.message);
+            }
+        }
+    </script>
+</th:block>
+</body>
+</html>

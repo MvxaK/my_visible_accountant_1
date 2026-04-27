@@ -1,0 +1,112 @@
+.alert-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.glass-card {
+    background: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.form-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6c757d;
+    margin-bottom: 6px;
+    display: block;
+    letter-spacing: 0.5px;
+}
+
+.form-control, .form-select {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 10px 15px;
+    font-size: 0.9rem;
+    background-color: #ffffff;
+    color: #1a1a1a;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 0 4px rgba(255, 193, 7, 0.1);
+    outline: none;
+}
+
+.status-badge {
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+}
+
+.status-active {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.15);
+}
+
+.status-inactive {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    border: 1px solid #dee2e6;
+}
+
+.form-switch .form-check-input {
+    width: 2.5em;
+    height: 1.25em;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #ffc107;
+    border-color: #ffc107;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    border: none;
+    color: #1a1a1a;
+    font-weight: 600;
+    border-radius: 10px;
+    padding: 10px 20px;
+    transition: background 0.2s;
+}
+
+.btn-warning:hover {
+    background-color: #ffca2c;
+    color: #000;
+}
+
+.btn-outline-danger {
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.alert-category-name {
+    font-weight: 600;
+    color: #1a1a1a;
+    text-decoration: none;
+}
+
+.alert-category-name:hover {
+    color: #d39e00;
+}
+
+.threshold-value {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.currency-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-left: 3px;
+}
